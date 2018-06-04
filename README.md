@@ -1,4 +1,4 @@
-# Lyft & Udacity Perception Challenge
+# Lyft Perception Challenge
 
 *This repository presents my solution to the Lyft & Udacity Perception challenge. A neural network based on the U-net architecture has been developed and trained to perform semantic segmentation on frames taken from a car front facing camera.*
 
@@ -38,7 +38,9 @@ In order to cover as many situations as possible, data was collected from 10 ite
 
 ![alt text](imgs/simulator.png)
 
-Initially, the data was augmented with different techniques but realized it was not needed if we generated enough samples. In addition, none of them proved interesting enough. For example, samples were randomly flipped horizontally but the new view generated was not a case that could apply during final testing in this particular challenge. When applied to real images, we would augment the data to generate different car orientations, camera positions, lighting, camera sensor noise…
+Initially, the data was augmented with different techniques but I realized it was not needed if we generated enough samples. In addition, none of them proved interesting enough. For example, samples were randomly flipped horizontally but the new view generated was not a case that could apply during final testing in this particular challenge.
+
+For real images, we would augment the data to generate different car orientations, camera positions, lighting, camera sensor noise…
 
 ## Network architecture
 
@@ -56,7 +58,7 @@ A few important highlights are important to note:
 
 - [Dropout](https://www.cs.toronto.edu/~hinton/absps/JMLRdropout.pdf) layers are used after every convolution except for the last layer to help generalize the network ;
 
-- [ELU functions](https://arxiv.org/pdf/1511.07289.pdf) are used instead of the traditional ReLU functions to avoid having too many "dead" neurons during training ;
+- [ELU functions](https://arxiv.org/pdf/1511.07289.pdf) are used instead of the traditional ReLU functions to avoid having too many "dead" neurons during training.
 
 For semantic segmentation, it is usually preferable to apply a sigmoid instead of softmax (more common for classification problems). In this particular case, we output 2 different classes representing the probability of the pixel belonging to a car or road.
 
@@ -76,23 +78,23 @@ The loss is simply the opposite of the score. We scale and offset it just to hav
 
 ## Training
 
-The training is performed with Adam optimizer. When the training & validation losses don't improve any more, we decreased the learning rate in order to fine-tune the weights.
+The training is performed with Adam optimizer. When the training & validation losses don't improve any more, we decrease the learning rate in order to fine-tune the weights.
 
 ![alt text](imgs/training.png)
 
 The validation loss can sometimes appear noisy but it is likely due to the fact that the 1,000 samples are actually taken from only 5 different continuous scenes with few variation in weather and position. When looking at sequential frames, they are very close to each other: the car in front may move at the same speed and look the same for several dozens of frames.
 
-It is interesting to note that the validation loss is lower than the training loss. At the start of training, it can be justified because the training loss is the mean of the losses from all the batches during one epoch and keep on improving while the validation loss is based on the network at the last epoch only. However when the network stagnates, the validation loss is still lower than the training loss, which is probably due to the fact that it can either be due to the dropout layers or from the fact that it runs on more simple data than the testing data.
+It is interesting to note that the validation loss is lower than the training loss. At the start of training, it can be justified because the training loss is the mean of the losses from all the batches during one epoch and keep on improving while the validation loss is based on the network at the last epoch only. However when the network stagnates, the validation loss is still lower than the training loss, which is either be due to the dropout layers or from the fact that it runs on more "simple" data than the testing data.
 
 We can see that the network does not over-fit as the validation data has never been seen by the network during testing. It demonstrates that the training data accumulated previously is sufficient for the network.
 
 ## Development of network architecture
 
-Several iterations of the neural network were developed and trained  Here are a few attempts that were made during the development of the network but not implemented in the final version:
+Several iterations of the neural network were developed and trained. Here are a few attempts that were made during the development of the network but not implemented in the final version:
 
-- The number of layers and resizing of input image were initially respectively set at 3 and 128x128 for quick prototyping. Final network only divides the horizontal dimension by two in order to see more details. The resolution is decreased only to guarantee a speed of 10 fps minimum during inference process. Training of the larger network was performed remotely on an instance with Nvidia Quadro P5000.
+- The number of layers and resizing of input image were initially respectively set at 3 and 128x128 for quick prototyping. Final network keeps full resolution in the vertical axis and divides the horizontal axis by two. The objective is to let the network see as many details as possible. The resolution is decreased only to guarantee a speed of 10 fps minimum during inference process. Training of the larger network was performed remotely on an instance with Nvidia Quadro P5000.
 
-- A sliding window approach was developed but did not lead to satisfactory results. When observing some of below samples, we can understand why it can be difficult to differentiate road and sidewalk. Also cars are cropped making it more difficult to learn their entire representation. ![alt text](imgs/sliding_window.png)
+- A sliding window approach was developed but did not lead to satisfactory results. When observing some of below samples, we can see that it can sometimes be difficult to differentiate road and sidewalk as we are missing part of the context. Also cars are cropped making it more difficult to learn their entire representation. ![alt text](imgs/sliding_window.png)
 
 - We used L2 regularization but the results became worse. The paper *[L2 Regularization versus Batch and Weight Normalization](https://arxiv.org/pdf/1706.05350.pdf)* shows that L2 may have limited regularization effect when used with other regularization methods and can affect weight and learning rates.
 
@@ -100,19 +102,25 @@ Several iterations of the neural network were developed and trained  Here are a 
 
 - We trained a network without dropout. We realized that the quantity of data we had generated was much higher than the data we see during an epoch of training. An epoch lasts 8mn and processes about 10,000 frames, 7 at a time (GPU limitations). However it resulted in over-fitting showing that even with a lot of data, we quickly over-fit without any form of regularization such as dropout or L2 on weights.
 
-Here are a few ideas that were not tested by lack of time:
+Here are a few ideas that were not tested due to lack of time:
 
-- Balance the training samples based on their accuracy through probability sampling or weighing score.
+- Represent images in other spaces than RGB such as HSV to see if it helps the network ;
 
-- Optimize separate networks for car and road detection.
+- Add a fourth channel to the image corresponding to the gray scale and try to train only on this channel or on all four channels (RGB + gray) ;
+
+- Balance the training samples based on their current F-score through probability sampling or weighing score ;
+
+- Optimize separate networks for car and road detection ;
+
+- Collect even more data! Even though the number of training samples is high, they come from continuous sequences, limiting their diversity. This time we would collect data from a lot of short and independent sequences.
 
 ## Results
 
-Our network outputs 2 frames corresponding to each class (road and car) with values in the range [0, 1]. We identify every value above 0.5 as corresponding to predicted class.
+We use the output of the final sigmoid layer as our output. It produces 2 frames corresponding to each class (road and car) with values in the range [0, 1] that we interpret as the probability of belonging to associated class. We identify every value above 0.5 as corresponding to evaluated class.
 
 ![alt text](imgs/prediction.png)
 
-It performs at a F-score of about 92-93% on our dataset, detecting well cars and road.
+The neural network performs at a F-score of about 92-93% on our dataset with an inference of about 13 frames per second, detecting well cars and road.
 
 ![alt text](imgs/result_video.gif)
 
@@ -122,7 +130,7 @@ It is important to note that the simulation only helps for prototyping our neura
 
 ## Usage
 
-*Prerequisites*:
+Prerequisites:
 
 - Data needs to be collected from Carla simulator and split between training and validation.
 

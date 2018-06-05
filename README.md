@@ -66,7 +66,7 @@ It is interesting to observe that a pixel could be in one of the two classes, in
 
 ## Loss definition
 
-The loss to minimize during training was defined such as it approximates the scoring loss of the challenge while still being differentiable (which is not the case of the scoring).
+The loss to minimize during training was defined such as it approximates the scoring loss of the challenge while still being differentiable (which is not the case of the scoring). It let the neural network optimize directly the real measured loss, instead of improving it indirectly through regular softmax cross-entropy.
 
 We first replace prediction and recall in the *F-score* function with their definition. We approximate true positive as the sum of the products of labels with the sigmoid logits. Also we consider the union of two sets as their sum, even if we count twice the same elements. These assumptions lead to the following differentiable score:
 
@@ -106,11 +106,17 @@ Here are a few ideas that were not tested due to lack of time:
 
 - Represent images in other spaces than RGB such as HSV to see if it helps the network ;
 
+- Replace separable convolution layers with regular convolution layers ;
+
+- Modify dropout strategy: at the moment we drop 10% of neurons in full network (except on output layer) while we could try different possibilities ;
+
 - Add a fourth channel to the image corresponding to the gray scale and try to train only on this channel or on all four channels (RGB + gray) ;
 
 - Balance the training samples based on their current F-score through probability sampling or weighing score ;
 
 - Optimize separate networks for car and road detection ;
+
+- Use pre-trained networks (such as VGG) for the contraction part of the architecture ;
 
 - Collect even more data! Even though the number of training samples is high, they come from continuous sequences, limiting their diversity. This time we would collect data from a lot of short and independent sequences.
 
@@ -120,13 +126,19 @@ We use the output of the final sigmoid layer as our output. It produces 2 frames
 
 ![alt text](imgs/prediction.png)
 
-The neural network performs at a F-score of about 92-93% on our dataset with an inference of about 13 frames per second, detecting well cars and road.
+The neural network performs at a F-score of about 92-93% on our data-set with an inference of about 13 frames per second, detecting relatively well cars and road.
 
 ![alt text](imgs/result_video.gif)
 
-It is important to note that the simulation only helps for prototyping our neural network. It could not be used directly on real data without being retrained on a much larger dataset from the real world. As expected, it leads to poor results when using a real photo as can be seen here below.
+This score is not sufficient for real life application in a self-driving car. When analyzing test frames, we can sometimes find some mislabelled, which is not acceptable for a Level 5 self-driving car. On below sample, the car on the left is not fully identified and there are a few issues in labeling the road going towards the right.
+
+![alt text](imgs/mislabelled_sample.png)
+
+It is important to note that the simulation only helps for prototyping our neural network. It could not be used directly on real data without being retrained on a much larger data-set from the real world. As expected, it leads to poor results when using a real photo as can be seen here below.
 
 ![alt text](imgs/real_prediction.png)
+
+The present results are nevertheless promising and demonstrate the potential of semantic segmentation on self-driving cars. The neural network was developed through numerous attempts and was optimized by implementing and testing every possible idea I had during the challenge. It would be worthwhile to perform trials of every untested idea previously mentioned in order to improve further the model.
 
 ## Usage
 
@@ -134,7 +146,7 @@ Prerequisites:
 
 - Data needs to be collected from Carla simulator and split between training and validation.
 
-- Program developed with python 3.6 and Tensorflow 1.8.
+- Program developed with python 3.6 and Tensorflow 1.8. With all possible drivers, CUDA, cuDNN and compute capability versions, it is recommended to learn how to compile and build Tensorflow from sources.
 
 The setup script `preinstall_script.sh` has been developed for setting Udacity workspace environment.
 

@@ -144,7 +144,7 @@ The present results are nevertheless promising and demonstrate the potential of 
 
 Prerequisites:
 
-- Data needs to be collected from Carla simulator and split between training and validation.
+- Data needs to be collected from Carla simulator and split between training and validation. The script `scr/carla_client.py` can be used for generating data from the simulator.
 
 - Program developed with python 3.6 and Tensorflow 1.8. With all possible drivers, CUDA, cuDNN and compute capability versions, it is recommended to learn how to compile and build Tensorflow from sources.
 

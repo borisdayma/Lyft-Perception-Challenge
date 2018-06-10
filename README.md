@@ -48,7 +48,7 @@ The general network architecture is based on [U-net](https://arxiv.org/pdf/1505.
 
 ![alt text](imgs/network_diagram.png)
 
-A few important highlights are important to note:
+A few highlights interesting to note:
 
 - the input image is cropped to eliminate the sky and the car hood and then the x axis is downsized by a factor 2 in order to have an inference fast enough (> 10 fps) ;
 

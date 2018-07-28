@@ -102,24 +102,6 @@ Several iterations of the neural network were developed and trained. Here are a 
 
 - We trained a network without dropout. We realized that the quantity of data we had generated was much higher than the data we see during an epoch of training. An epoch lasts 8mn and processes about 10,000 frames, 7 at a time (GPU limitations). However it resulted in over-fitting showing that even with a lot of data, we quickly over-fit without any form of regularization such as dropout or L2 on weights.
 
-Here are a few ideas that were not tested due to lack of time:
-
-- Represent images in other spaces than RGB such as HSV to see if it helps the network ;
-
-- Replace separable convolution layers with regular convolution layers ;
-
-- Modify dropout strategy: at the moment we drop 10% of neurons in full network (except on output layer) while we could try different possibilities ;
-
-- Add a fourth channel to the image corresponding to the gray scale and try to train only on this channel or on all four channels (RGB + gray) ;
-
-- Balance the training samples based on their current F-score through probability sampling or weighing score ;
-
-- Optimize separate networks for car and road detection ;
-
-- Use pre-trained networks (such as VGG) for the contraction part of the architecture ;
-
-- Collect even more data! Even though the number of training samples is high, they come from continuous sequences, limiting their diversity. This time we would collect data from a lot of short and independent sequences.
-
 ## Results
 
 We use the output of the final sigmoid layer as our output. It produces 2 frames corresponding to each class (road and car) with values in the range [0, 1] that we interpret as the probability of belonging to associated class. We identify every value above 0.5 as corresponding to evaluated class.
@@ -163,3 +145,23 @@ Finally, inference is performed using:
     python src/run.py path_to_video
 
 It prints out encoded resulting inference for evaluation.
+
+## Future work
+
+Here are a few ideas that were not tested due to lack of time:
+
+- Represent images in other spaces than RGB such as HSV to see if it helps the network ;
+
+- Replace separable convolution layers with regular convolution layers ;
+
+- Modify dropout strategy: at the moment we drop 10% of neurons in full network (except on output layer) while we could try different possibilities ;
+
+- Add a fourth channel to the image corresponding to the gray scale and try to train only on this channel or on all four channels (RGB + gray) ;
+
+- Balance the training samples based on their current F-score through probability sampling or weighing score ;
+
+- Optimize separate networks for car and road detection ;
+
+- Use pre-trained networks (such as VGG) for the contraction part of the architecture ;
+
+- Collect even more data! Even though the number of training samples is high, they come from continuous sequences, limiting their diversity. This time we would collect data from a lot of short and independent sequences.
